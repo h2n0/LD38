@@ -1,0 +1,30 @@
+### MoSCoW ###
+
+You have an a small planet and you need to keep your people alive
+As time goes on you get more people and your planet can only hold so many people
+So you need a way to get rid of them or move to a larger planet (Takes a lot of resources && is kind of unobtainable)
+
+When you send a small number of people off your planet to another planet, really we're just adding them to someone else's game making their lives a bit more
+chaotic.
+
+
+You get a small bonus for accepting some new people but also a few penalties (illness)
+
+
+## Challenge ##
+Use no text for dialog
+###############
+
+# Must
+- Have a population limit where you lose if you hit it (7 Million?)
+- Connection to a DB
+- Be able to send people away from your planet (linear scale of resources per 100 people to build the ships)
+- Get new people on your planet
+
+# Should
+- Progress for a while before realising that this is an issue (Like we have)
+
+# C & W
+- Not really in an LD
+
+
