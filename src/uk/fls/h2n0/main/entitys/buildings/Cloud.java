@@ -11,12 +11,15 @@ public class Cloud extends Building {
 	private int[] data;
 	private float yoff;
 	private boolean cos;
+	private int life = 0;
 	public Cloud(Planet home, Point pos) {
 		super(home);
 		this.pos = new Point(pos.x, pos.y);
 		this.data = LD38.sp.getData(Math.random()>0.5f?18:19);
 		this.yoff = (float)Math.random();
 		this.cos = Math.random() > 0.5f;
+		this.life = (int)((60 * 30) + ((60 * 60) * Math.random()));
+		this.life *= 2;
 	}
 	
 	public void render(Renderer r,int off){
@@ -35,6 +38,12 @@ public class Cloud extends Building {
 			this.pos.y = (float)Math.sin(Math.toRadians(yoff)) * 40;
 		}
 		yoff += 0.05f; //Math.max(0.05f, Math.random() * 0.75f);
+		
+		this.life--;
+		if(this.life == 0){
+			this.remove = true;
+			this.home.addBuilding(new Water(this.home, this.pos));
+		}
 	}
 	
 }

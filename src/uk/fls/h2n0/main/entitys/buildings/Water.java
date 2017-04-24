@@ -20,6 +20,13 @@ public class Water extends Building{
 		this.pos = new Point(ax,0);
 	}
 	
+	public Water(Planet home, Point pos){
+		this(home);
+		this.amt = 5 - (int)(Math.random() * 3);
+		this.fade = 60;
+		this.pos = pos;
+	}
+	
 	public void render(Renderer r, int off){
 		int[] npos = this.home.getOffsets(this.pos);
 		if(this.home.isShowing(this.pos.getIX() + off)){

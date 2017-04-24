@@ -17,6 +17,7 @@ public class Planet {
 	private float rot;
 	private List<Peon> people;
 	private List<Building> buildings;
+	private Point[] stars;
 	public Base hb;
 	public Point pos;
 
@@ -45,9 +46,21 @@ public class Planet {
 		
 		Point point = hb.getDropOffPoint();
 		for(int i = -1; i < 2; i+=2)addPerson(point.getIX() + i * 4, point.getIY(), false);
+		
+		this.stars = new Point[360];
+		for(int i = 0; i < this.stars.length; i++){
+			this.stars[i] = new Point((float)(Math.random() * 360f), (float)(Math.random() * LD38.h));
+		}
 	}
 
 	public void render(Renderer r) {
+		
+		for(Point p : this.stars){
+			int ox = (int)(p.getIX() - this.rot);
+			if(ox < 0)ox += 360;
+			r.setPixel(ox, p.getIY(), 0xCCCCFF);
+		}
+		
 		drawBase(r);
 		
 		
@@ -210,23 +223,13 @@ public class Planet {
 	}
 	
 	public int getHealth(){
-		float numPeople = (int)this.people.size();
+		float numPeople = (float)this.people.size();
 		float ill = 0;
 		for(int i = 0; i < this.people.size(); i++){
 			if(this.people.get(i).isIll())ill += 1f;
 		}
 		
 		return 100 - (int)((ill / numPeople) * 100f);
-	}
-	
-	public int getNumberOfHouses(){
-		int res = 0;
-		/***for(int i = 0; i < this.buildings.size(); i++){
-			if(buildings.get(i) instanceof House){
-				res++;
-			}
-		}**/
-		return res;
 	}
 	
 	public Building[] getBuildings(){
@@ -251,7 +254,7 @@ public class Planet {
 		this.hb.giveResource(Resource.Composite, composite);
 		
 		if(!this.hb.takeResource(Resource.Water, this.people.size() * 5)){
-			this.hb.decreaseHappiness();
+			this.hb.decreaseHappiness(this.getHealth());
 			if(this.hb.getHappiness() < 50){// Sad get ill
 				for(int i = 0; i < this.people.size(); i++){
 					Peon p = this.people.get(i);

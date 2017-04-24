@@ -4,6 +4,7 @@ import fls.engine.main.util.Point;
 import fls.engine.main.util.Renderer;
 import uk.fls.h2n0.main.entitys.buildings.Base;
 import uk.fls.h2n0.main.entitys.buildings.Building;
+import uk.fls.h2n0.main.entitys.buildings.Rocket;
 import uk.fls.h2n0.main.entitys.buildings.Water;
 
 public class Peon extends Entity{
@@ -54,8 +55,6 @@ public class Peon extends Entity{
 	
 	public void update(){// AI things live here urgh...
 		
-		
-		
 		if(this.carry.full){// Need to head back to base because it is full
 			if(getDist(this.homeBase.pos) < 18 * 18){// Drop off resource
 				if(this.actionCool-- <= 0){
@@ -77,28 +76,54 @@ public class Peon extends Entity{
 		}else{// Go look for or be assigned what to look for
 			if(this.targetPos != null){//Has job just needs to fill their inventory
 				if(getDist(this.targetPos) < 18 * 18){// 17px or closer
-					if(this.actionCool == 0){
-						Resource res = this.targetJob.getResource();
-						if(res == null){
-							this.targetPos = null;
-						}else{
-							this.carry.addResource(res, 1);
-							this.actionCool = 60;
-						}
-					}
 					
-					if(this.actionCool > 0){
-						this.actionCool --;
+					if(!(this.targetJob instanceof Rocket)){
+						if(this.actionCool == 0){
+							Resource res = this.targetJob.getResource();
+							if(res == null){
+								this.targetPos = null;
+							}else{
+								this.carry.addResource(res, 1);
+								this.actionCool = 60;
+							}
+						}
+						
+						if(this.actionCool > 0){
+							this.actionCool --;
+						}
+					}else{
+						if(this.actionCool == 0){
+							this.remove = true;
+							((Rocket)this.targetJob).addPeon();
+						}
 					}
 				}else{
 					float[] m = getMotionToTarget(targetPos);
 					this.pos.x += m[0];
 					this.pos.y += m[1];
+					
+					if(this.targetJob instanceof Rocket){
+						Rocket ro = (Rocket)this.targetJob;
+						if(ro.takenOff()){
+							this.targetJob = null;
+							this.targetPos = null;
+						}
+					}
 				}
 			}else{// Looking for a new job
-				Class jobType = Math.random()>0.5?Water.class: null;
+				Class<?> jobType = Math.random()>0.5?Water.class: null;
 				if(this.ill){//Happiness is low so find water to make it better. Very urgent task
 					jobType = Water.class;
+					if(this.home.getNumberOfBuilding(Rocket.class) > 0){
+						Building[] bbs = this.home.getBuildings();
+						for(int i = 0; i < bbs.length; i++){
+							if(bbs[i] instanceof Rocket){
+								this.targetJob = bbs[i];
+								this.targetPos = bbs[i].pos;
+								return;
+							}
+						}
+					}
 				}
 				Building[] bs = this.home.getBuildings();
 				Building target = null;
@@ -114,7 +139,7 @@ public class Peon extends Entity{
 							}
 							
 							target = b;
-							lastPos = getDistToX(pos.x, b.pos.x);
+							lastPos = getDistToX((int)pos.x, (int)b.pos.x);
 						}else{
 							
 							if(jobType.equals(Water.class)){
@@ -166,7 +191,7 @@ public class Peon extends Entity{
 		while(os != t){
 			os++;
 			prev++;
-			if(os > 360)s-=360;
+			if(os > 360)os-=360;
 		}
 		
 		os = s;

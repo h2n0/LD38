@@ -4,7 +4,6 @@ import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 
 import fls.engine.main.art.Art;
-import fls.engine.main.io.DataFile;
 import fls.engine.main.screen.Screen;
 import fls.engine.main.util.Renderer;
 import uk.fls.h2n0.main.LD38;
@@ -13,28 +12,21 @@ import uk.fls.h2n0.main.entitys.Resource;
 import uk.fls.h2n0.main.entitys.buildings.Building;
 import uk.fls.h2n0.main.entitys.buildings.CloudGen;
 import uk.fls.h2n0.main.entitys.buildings.Miner;
+import uk.fls.h2n0.main.entitys.buildings.Rocket;
 import uk.fls.h2n0.main.util.Font;
 
 public class GameScreen extends Screen {
 
 	private Renderer r;
 	private Planet p;
-	private DataFile df;
 	private Building activeBuilding;
 	
 	private int mx, my;
 	
 	public void postInit(){
 		this.r = new Renderer(this.game.getImage());
-		this.df = new DataFile("data");
 		
-		if(this.df.getData("planet") != null){
-			// Load the planet from a string I guess
-		}else{// New game
-			this.p  = new Planet();
-		}
-		
-		this.input.setScreenshotKey(KeyEvent.VK_P);
+		this.p = new Planet();
 	}
 	
 	@Override
@@ -70,7 +62,7 @@ public class GameScreen extends Screen {
 		}
 		
 		if(this.input.isKeyPressed(this.input.space)){
-			this.p.setRot(0);
+			//this.p.setRot(0);
 		}
 		
 		if(this.input.isKeyPressed(this.input.getScreenshotKey())){
@@ -86,13 +78,15 @@ public class GameScreen extends Screen {
 				float dy = my - cy;
 				
 				if((dx * dx) + (dy * dy) < 52 * 52){
-					
-
-					
-					if(this.activeBuilding instanceof CloudGen){
-						if(!this.p.hb.takeResource(Resource.Composite, 100))return;					
+					int vi = this.activeBuilding instanceof CloudGen?100:this.activeBuilding instanceof Miner?200:0;
+					if(this.activeBuilding instanceof CloudGen){	
+						vi = 100 + (this.p.getNumberOfBuilding(CloudGen.class) * 50);
+						if(!this.p.hb.takeResource(Resource.Composite, vi))return;
 					}else if(this.activeBuilding instanceof Miner){
-						if(!this.p.hb.takeResource(Resource.Composite, 200))return;
+						vi = 200 + (this.p.getNumberOfBuilding(Miner.class) * 150);
+						if(!this.p.hb.takeResource(Resource.Composite, vi))return;
+					}else if(this.activeBuilding instanceof Rocket){
+						if(!this.p.hb.takeResource(Resource.Composite, 500))return;
 					}
 					this.activeBuilding.place((int)dx - 8, (int)dy);
 					this.activeBuilding = null;
@@ -100,6 +94,10 @@ public class GameScreen extends Screen {
 					this.activeBuilding = null;
 				}
 			}
+		}
+		
+		if(this.p.hb.getHappiness() == 0 && this.p.getHealth() == 0){//Every one is sick and unhappy this is the lose condition
+			setScreen(new TitleScreen());
 		}
 	}
 		
@@ -130,12 +128,18 @@ public class GameScreen extends Screen {
 			
 			if(mx >= xo && mx <= xo + 16){
 				if(my >= yo && my <= yo + 16){
+					int vi = values[i-1];
+					if(i == 1){
+						vi = values[i-1] + (this.p.getNumberOfBuilding(CloudGen.class) * 50);
+					}else if(i == 2){
+						vi = values[i-1] + (this.p.getNumberOfBuilding(Miner.class) * 150);
+					}
 					Font.renderString(r, "^", xo + 4, LD38.h - (24+8));
-					Font.renderString(r, ""+values[i-1]+"?", xo-5, LD38.h - (24+12));
+					Font.renderString(r, ""+vi+"?", xo-5, LD38.h - (24+12));
 					
 					if(this.input.leftMouseButton.justClicked()){
 						if(this.activeBuilding == null){
-							this.activeBuilding = (i==1?new CloudGen(this.p):i==2?new Miner(this.p):null);
+							this.activeBuilding = (i==1?new CloudGen(this.p):i==2?new Miner(this.p):new Rocket(this.p));
 							this.input.relaseMouseButtons();
 						}
 					}
@@ -146,11 +150,19 @@ public class GameScreen extends Screen {
 	
 	private void drawItem(int xo, int x){
 		if(x >= 1)x++;
+		
 		int yo = LD38.h - 24;
-		for(int i = 0; i < 2 * 2; i++){
-			int tx = i % 2;
-			int ty = i / 2;
-			r.renderSection(LD38.sp.getData((x*2) + tx, 2 + ty), xo + (tx * 8), yo + ty * 8, 8);
+		
+
+		if(x == 4){
+			r.renderSection(LD38.sp.getData(3,6), xo + 4, yo, 8);
+			r.renderSection(LD38.sp.getData(3,7), xo + 4, yo + 8, 8);
+		}else{
+			for(int i = 0; i < 2 * 2; i++){
+				int tx = i % 2;
+				int ty = i / 2;
+				r.renderSection(LD38.sp.getData((x*2) + tx, 2 + ty), xo + (tx * 8), yo + ty * 8, 8);
+			}
 		}
 	}
 }

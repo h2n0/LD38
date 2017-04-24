@@ -18,9 +18,9 @@ public class Base extends Building{
 		y = Math.random()>0.5?-y:y;
 		this.pos = new Point(0,y);
 		
-		this.water = 30;
+		this.water = 100;
 		this.composite = 300;
-		this.happiness = 30;
+		this.happiness = 50;
 	}
 
 	
@@ -85,13 +85,15 @@ public class Base extends Building{
 		return this.happiness;
 	}
 	
-	public void decreaseHappiness(){
+	public void decreaseHappiness(int healthPerc){
 		if(this.happiness == 0)return;
-		this.happiness -= 5;
+		this.happiness -= (int)(5 + (5 * (100f - (float)healthPerc)));
+		if(this.happiness < 0)this.happiness = 0;
 	}
 	
 	public void increaseHappiness(){
 		if(this.happiness == 100)return;
 		this.happiness ++;
+		if(this.happiness > 100)this.happiness = 100;
 	}
 }
