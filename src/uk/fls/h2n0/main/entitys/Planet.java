@@ -8,8 +8,10 @@ import fls.engine.main.util.Renderer;
 import uk.fls.h2n0.main.LD38;
 import uk.fls.h2n0.main.entitys.buildings.Base;
 import uk.fls.h2n0.main.entitys.buildings.Building;
+import uk.fls.h2n0.main.entitys.buildings.Cloud;
 import uk.fls.h2n0.main.entitys.buildings.Miner;
 import uk.fls.h2n0.main.entitys.buildings.Water;
+import uk.fls.h2n0.main.util.Font;
 
 public class Planet {
 
@@ -74,8 +76,6 @@ public class Planet {
 			if(this.buildings.get(i).remove)continue;
 			this.buildings.get(i).render(r, irot);
 		}
-		
-		//Font.renderString(r, ""+this.getRot(), 8, 8);
 	}
 
 	public void update() {
@@ -102,7 +102,8 @@ public class Planet {
 	}
 	
 	public void addPerson(){
-		this.people.add(new Peon(this, this.hb, 0, 0));
+		Point p = this.hb.getDropOffPoint();
+		addPerson(p.getIX(), p.getIY(), false);
 	}
 	
 	public void addPerson(int x, int y, boolean ill){
@@ -148,7 +149,7 @@ public class Planet {
 		if(getSignedRot() > -90  && getSignedRot() < 90){
 			for(int yy = -r; yy < r; yy++){
 				//float ox = (float) (Math.sin(getRad(getRealRot()))) * (float)(mr - Math.abs(yy/2f) + Math.sin(radRot/10f)); 
-				rr.setPixel(x + getYOnRotCurve(yy, this.rot), y + yy, 0xFF0000);
+				rr.setPixel(x + getYOnRotCurve(yy, getSignedRot()), y + yy, 0xFF0000);
 			}
 		}
 	}
@@ -196,6 +197,7 @@ public class Planet {
 	
 	public int getYOnRotCurve(int y, float rot){
 		float ox = (float) (Math.sin(getRad(rot))) * (float)(this.radius - Math.abs(y));
+		// ORIGINAL float ox = (float) Math.sin(getRad(rot) / 4f) * -Math.abs(y) * 12;
 		//float f3 = (float) Math.sin(getRad(rot) + y / this.radius) * -Math.abs(y) * 10f;
 		return (int)ox;
 	}
@@ -232,12 +234,18 @@ public class Planet {
 		return 100 - (int)((ill / numPeople) * 100f);
 	}
 	
-	public Building[] getBuildings(){
-		Building[] res = new Building[this.buildings.size()];
-		for(int i = 0; i < res.length; i++){
-			res[i] = this.buildings.get(i);
+	public Building[] getBuildingsOfType(Class<? extends Building> b){
+		List<Building> res = new ArrayList<Building>();
+		for(int i = 0; i < this.buildings.size(); i++){
+			Building bb = this.buildings.get(i);
+			if(bb.getClass().equals(b))res.add(bb);
 		}
-		return res;
+		Building[] r = new Building[res.size()];
+		return res.toArray(r);
+	}
+	
+	public int getNumberOfPeons(){
+		return this.people.size();
 	}
 	
 	public int getColor(){
@@ -254,6 +262,7 @@ public class Planet {
 		this.hb.giveResource(Resource.Composite, composite);
 		
 		if(!this.hb.takeResource(Resource.Water, this.people.size() * 5)){
+			this.hb.removeAllWater();
 			this.hb.decreaseHappiness(this.getHealth());
 			if(this.hb.getHappiness() < 50){// Sad get ill
 				for(int i = 0; i < this.people.size(); i++){
@@ -264,15 +273,16 @@ public class Planet {
 						break;
 					}
 				}
-			}else if(this.hb.getHappiness() >= 80){// Happy have kids
+			}
+		}else{
+			this.hb.increaseHappiness();
+			if(this.hb.getHappiness() >= 80){// Happy have kids
 				if(Math.random() > 0.75f){
 					for(int i = 0; i < 2; i++)addPerson();
 				}else{
 					this.addPerson();
 				}
 			}
-		}else{
-			this.hb.increaseHappiness();
 		}
 	}
 }

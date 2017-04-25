@@ -55,6 +55,13 @@ public class Peon extends Entity{
 	
 	public void update(){// AI things live here urgh...
 		
+		if(this.targetJob != null){
+			if(this.targetJob.remove){
+				this.targetJob = null;
+				this.targetPos = null;
+			}
+		}
+		
 		if(this.carry.full){// Need to head back to base because it is full
 			if(getDist(this.homeBase.pos) < 18 * 18){// Drop off resource
 				if(this.actionCool-- <= 0){
@@ -74,9 +81,27 @@ public class Peon extends Entity{
 				this.pos.y += m[1];
 			}
 		}else{// Go look for or be assigned what to look for
+			
+			if(this.targetJob instanceof Rocket){
+				if(getDist(targetPos) < 18 * 18){
+						if(this.actionCool == 0){
+							this.remove = true;
+							((Rocket)this.targetJob).addPeon();
+						}else{
+							this.actionCool--;
+					}
+				}else{
+					if(((Rocket)this.targetJob).takenOff()){
+						this.targetJob = null;
+						this.targetPos = null;
+					}
+				}
+			}
+			
 			if(this.targetPos != null){//Has job just needs to fill their inventory
-				if(getDist(this.targetPos) < 18 * 18){// 17px or closer
-					
+				
+				float gd = this.getDist(targetPos);
+				if(gd < 18 * 18){// 17px or closer
 					if(!(this.targetJob instanceof Rocket)){
 						if(this.actionCool == 0){
 							Resource res = this.targetJob.getResource();
@@ -90,11 +115,6 @@ public class Peon extends Entity{
 						
 						if(this.actionCool > 0){
 							this.actionCool --;
-						}
-					}else{
-						if(this.actionCool == 0){
-							this.remove = true;
-							((Rocket)this.targetJob).addPeon();
 						}
 					}
 				}else{
@@ -111,21 +131,20 @@ public class Peon extends Entity{
 					}
 				}
 			}else{// Looking for a new job
-				Class<?> jobType = Math.random()>0.5?Water.class: null;
+				Class<? extends Building> jobType = Math.random()>0.5?Water.class: null;
 				if(this.ill){//Happiness is low so find water to make it better. Very urgent task
 					jobType = Water.class;
-					if(this.home.getNumberOfBuilding(Rocket.class) > 0){
-						Building[] bbs = this.home.getBuildings();
+					
+					if(this.home.getNumberOfBuilding(Rocket.class) > 0){// In a hurry to get to the rocket so the first one will do
+						Building[] bbs = this.home.getBuildingsOfType(Rocket.class);
 						for(int i = 0; i < bbs.length; i++){
-							if(bbs[i] instanceof Rocket){
 								this.targetJob = bbs[i];
 								this.targetPos = bbs[i].pos;
 								return;
-							}
 						}
 					}
 				}
-				Building[] bs = this.home.getBuildings();
+				Building[] bs = this.home.getBuildingsOfType(jobType);
 				Building target = null;
 				if(jobType == null)return;
 				float lastPos = 999f;
@@ -139,14 +158,14 @@ public class Peon extends Entity{
 							}
 							
 							target = b;
-							lastPos = getDistToX((int)pos.x, (int)b.pos.x);
+							lastPos = getDistToX(pos.getIX(), b.pos.getIX());
 						}else{
 							
 							if(jobType.equals(Water.class)){
 								if(!((Water)b).hasWater())continue;
 							}
 							
-							float dis = getDist(b.pos);
+							float dis = getDistToX(pos.getIX(), b.pos.getIX());
 							if(dis < lastPos){
 								target = b;
 								lastPos = dis;
@@ -163,8 +182,8 @@ public class Peon extends Entity{
 	}
 	
 	public float[] getMotionToTarget(Point p){
-		float dy = p.y - pos.y;
-		float dx = p.x - pos.x;
+		float dy = p.y - this.pos.y;
+		float dx = this.home.getSignedRot(p.x) - this.home.getSignedRot(this.pos.x);
 		float a = (float)Math.atan2(dy, dx);
 		
 		float mx = (float)Math.cos(a) * this.speed;
@@ -180,8 +199,8 @@ public class Peon extends Entity{
 	//Returns a squared distance to make it quicker
 	// X is a rot, just a reminder
 	public float getDist(Point p){
-		float dy = this.pos.y - p.y;
-		float dx = this.pos.x - p.x;
+		float dy = p.y - this.pos.y;
+		float dx = this.home.getSignedRot(p.x) - this.home.getSignedRot(this.pos.x);
 		return (dy * dy) + (dx * dx);
 	}
 	
@@ -193,7 +212,6 @@ public class Peon extends Entity{
 			prev++;
 			if(os > 360)os-=360;
 		}
-		
 		os = s;
 		int prev2 = 0;
 		while(os != t){
@@ -201,7 +219,6 @@ public class Peon extends Entity{
 			prev2++;
 			if(os < 0)os+=360;
 		}
-		
 		return prev < prev2?prev:prev2;
 		
 	}

@@ -39,6 +39,7 @@ public class GameScreen extends Screen {
 		drawHealth();
 		drawWater();
 		drawComposite();
+		drawPeople();
 		drawItemBar();
 		
 		if(this.activeBuilding != null){
@@ -117,6 +118,11 @@ public class GameScreen extends Screen {
 	private void drawComposite(){
 		int amt = this.p.hb.getComposite();
 		Font.renderWithTint(r, "? "+amt, 8, 64, 0xCCCCCC);
+	}
+	
+	private void drawPeople(){
+		int amt = this.p.getNumberOfPeons();
+		Font.renderWithTint(r, amt + " ;", LD38.w - (8 + (""+amt+" ;").length() * 6) , 16, 0xCC00CC);
 	}
 	
 	private void drawItemBar(){// Draws the cloud generators, mines and pods

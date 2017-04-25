@@ -93,7 +93,11 @@ public class Base extends Building{
 	
 	public void increaseHappiness(){
 		if(this.happiness == 100)return;
-		this.happiness ++;
+		this.happiness += 1 + (this.home.getNumberOfPeons() / 4);
 		if(this.happiness > 100)this.happiness = 100;
+	}
+	
+	public void removeAllWater(){
+		this.water = 0;
 	}
 }

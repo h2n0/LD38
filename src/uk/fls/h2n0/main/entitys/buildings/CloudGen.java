@@ -30,7 +30,7 @@ public class CloudGen extends Building {
 	
 	public void update(){
 		if(this.timer > 60 * 15){
-			if(this.home.getNumberOfBuilding(Cloud.class) < 50){
+			if( this.home.getNumberOfBuilding(Water.class) + this.home.getNumberOfBuilding(Cloud.class) < 5 +this.home.getNumberOfPeons()){
 				this.home.addBuilding(new Cloud(this.home, this.pos));
 				this.timer = 0;
 			}
